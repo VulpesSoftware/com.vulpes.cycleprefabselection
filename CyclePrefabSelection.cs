@@ -56,31 +56,26 @@ namespace Vulpes
                             previousPrefab = prefab;
                         }
                         
+                        Object prefabToUse = null;
+                        
                         if (e.delta.x > 0.0f || e.delta.y > 0.0f)
                         {
-                            GameObject replacement = PrefabUtility.InstantiatePrefab(nextPrefab) as GameObject;
-                            replacement.transform.position = selection.transform.position;
-                            replacement.transform.eulerAngles = selection.transform.eulerAngles;
-                            replacement.transform.localScale = selection.transform.localScale;
-                            replacement.transform.SetParent(selection.transform.parent);
-                            Selection.activeGameObject = replacement;
-                            Undo.RegisterCreatedObjectUndo(replacement, "Cycle Prefab");
-                            Undo.RegisterFullObjectHierarchyUndo(selection, "Cycle Prefab");
-                            Object.DestroyImmediate(selection);
-                            EditorSceneManager.MarkAllScenesDirty();
+                            prefabToUse = nextPrefab;
                         } else if (e.delta.x < 0.0f || e.delta.y < 0.0f)
                         {
-                            GameObject replacement = PrefabUtility.InstantiatePrefab(previousPrefab) as GameObject;
-                            replacement.transform.position = selection.transform.position;
-                            replacement.transform.eulerAngles = selection.transform.eulerAngles;
-                            replacement.transform.localScale = selection.transform.localScale;
-                            replacement.transform.SetParent(selection.transform.parent);
-                            Selection.activeGameObject = replacement;
-                            Undo.RegisterCreatedObjectUndo(replacement, "Cycle Prefab");
-                            Undo.RegisterFullObjectHierarchyUndo(selection, "Cycle Prefab");
-                            Object.DestroyImmediate(selection);
-                            EditorSceneManager.MarkAllScenesDirty();
+                            prefabToUse = previousPrefab;
                         }
+
+                        GameObject replacement = PrefabUtility.InstantiatePrefab(prefabToUse) as GameObject;
+                        replacement.transform.position = selection.transform.position;
+                        replacement.transform.eulerAngles = selection.transform.eulerAngles;
+                        replacement.transform.localScale = selection.transform.localScale;
+                        replacement.transform.SetParent(selection.transform.parent);
+                        Selection.activeGameObject = replacement;
+                        Undo.RegisterCreatedObjectUndo(replacement, "Cycle Prefab");
+                        Undo.RegisterFullObjectHierarchyUndo(selection, "Cycle Prefab");
+                        Object.DestroyImmediate(selection);
+                        EditorSceneManager.MarkAllScenesDirty();
 
                         e.Use();
                     }
