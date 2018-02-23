@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -16,33 +16,55 @@ namespace Vulpes
 
         private static void OnSceneGUI(SceneView sceneView)
         {
-            GameObject selection = Selection.activeGameObject;
-            if (selection != null)
+            Object[] selection = Selection.objects;
+            Object[] newSelection = new Object[selection.Length];
+
+            if (selection.Length > 0)
             {
-                PrefabType prefabType = PrefabUtility.GetPrefabType(selection);
-                if (prefabType == PrefabType.PrefabInstance && PrefabUtility.FindPrefabRoot(selection) == selection)
+                Event e = Event.current;
+
+                if (e.type == EventType.scrollWheel && e.modifiers == EventModifiers.Alt)
                 {
-                    Event e = Event.current;
-                    if (e.type == EventType.scrollWheel && e.modifiers == EventModifiers.Alt)
+                    for (int selectionIndex = 0; selectionIndex < selection.Length; selectionIndex++)
                     {
-                        Object prefab = PrefabUtility.GetPrefabParent(selection);
+                        GameObject selectionGameObject = (GameObject)selection[selectionIndex];
+                        PrefabType prefabType = PrefabUtility.GetPrefabType(selectionGameObject);
+
+                        if (prefabType != PrefabType.PrefabInstance)
+                        {
+                            newSelection[selectionIndex] = selectionGameObject;
+                            continue;
+                        }
+
+                        GameObject prefabRoot = PrefabUtility.FindPrefabRoot(selectionGameObject);
+
+                        if (prefabRoot != selectionGameObject)
+                        {
+                            selection[selectionIndex] = prefabRoot;
+                            Selection.objects = selection;
+                            selectionGameObject = prefabRoot;
+                        }
+
+                        Object prefab = PrefabUtility.GetPrefabParent(selectionGameObject);
                         Object nextPrefab = null;
                         Object previousPrefab = null;
                         string assetDirectory = AssetDatabase.GetAssetPath(prefab).Replace(string.Format("{0}.prefab", prefab.name), "");
                         DirectoryInfo directoryInfo = new DirectoryInfo(assetDirectory);
                         FileInfo[] fileInfo = directoryInfo.GetFiles("*.prefab");
+                        // TODO Find alternate solution that doesn't involve caching all the prefabs, we only care about two of them after all.
                         Object[] allPrefabs = new Object[fileInfo.Length];
                         int currentIndex = 0;
 
-                        for (int i = 0; i < fileInfo.Length; i++)
+                        for (int fileInfoIndex = 0; fileInfoIndex < fileInfo.Length; fileInfoIndex++)
                         {
-                            string fullPath = fileInfo[i].FullName.Replace(@"\", "/");
+                            string fullPath = fileInfo[fileInfoIndex].FullName.Replace(@"\", "/");
                             string assetPath = "Assets" + fullPath.Replace(Application.dataPath, "");
                             Object prefabRef = AssetDatabase.LoadAssetAtPath(assetPath, typeof(Object));
-                            allPrefabs[i] = prefabRef;
+                            allPrefabs[fileInfoIndex] = prefabRef;
+
                             if (prefabRef == prefab)
                             {
-                                currentIndex = i;
+                                currentIndex = fileInfoIndex;
                             }
                         }
 
@@ -55,9 +77,10 @@ namespace Vulpes
                             nextPrefab = prefab;
                             previousPrefab = prefab;
                         }
-                        
+
                         Object prefabToUse = null;
-                        
+
+                        // TODO Can probably just use the event delta earlier to determine whether we want the next or previous prefab and avoid caching both prior.
                         if (e.delta.x > 0.0f || e.delta.y > 0.0f)
                         {
                             prefabToUse = nextPrefab;
@@ -67,18 +90,19 @@ namespace Vulpes
                         }
 
                         GameObject replacement = PrefabUtility.InstantiatePrefab(prefabToUse) as GameObject;
-                        replacement.transform.position = selection.transform.position;
-                        replacement.transform.eulerAngles = selection.transform.eulerAngles;
-                        replacement.transform.localScale = selection.transform.localScale;
-                        replacement.transform.SetParent(selection.transform.parent);
-                        Selection.activeGameObject = replacement;
+                        replacement.transform.position = selectionGameObject.transform.position;
+                        replacement.transform.eulerAngles = selectionGameObject.transform.eulerAngles;
+                        replacement.transform.localScale = selectionGameObject.transform.localScale;
+                        replacement.transform.SetParent(selectionGameObject.transform.parent);
+                        newSelection[selectionIndex] = replacement;
                         Undo.RegisterCreatedObjectUndo(replacement, "Cycle Prefab");
-                        Undo.RegisterFullObjectHierarchyUndo(selection, "Cycle Prefab");
-                        Object.DestroyImmediate(selection);
+                        Undo.RegisterFullObjectHierarchyUndo(selectionGameObject, "Cycle Prefab");
+                        Object.DestroyImmediate(selectionGameObject);
                         EditorSceneManager.MarkAllScenesDirty();
-
-                        e.Use();
                     }
+                    
+                    Selection.objects = newSelection;
+                    e.Use();
                 }
             }
         }
