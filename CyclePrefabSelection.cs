@@ -8,10 +8,13 @@ namespace Vulpes
     [InitializeOnLoad]
     public sealed class CyclePrefabSelection 
     {
+        private static EventModifiers cycleModifierKey = EventModifiers.Alt; // Note: Only Alt, Control, Shift, and Caps Lock seem to work.
+
         static CyclePrefabSelection()
         {
             SceneView.onSceneGUIDelegate -= OnSceneGUI;
             SceneView.onSceneGUIDelegate += OnSceneGUI;
+            cycleModifierKey = (EventModifiers)EditorPrefs.GetInt("CyclePrefabSelectionCycleModifierKey", 4);
         }
 
         private static void OnSceneGUI(SceneView sceneView)
@@ -23,7 +26,7 @@ namespace Vulpes
             {
                 Event e = Event.current;
 
-                if (e.type == EventType.scrollWheel && e.modifiers == EventModifiers.Alt)
+                if (e.type == EventType.ScrollWheel && e.modifiers == cycleModifierKey)
                 {
                     for (int selectionIndex = 0; selectionIndex < selection.Length; selectionIndex++)
                     {
@@ -100,10 +103,20 @@ namespace Vulpes
                         Object.DestroyImmediate(selectionGameObject);
                         EditorSceneManager.MarkAllScenesDirty();
                     }
-                    
+
                     Selection.objects = newSelection;
                     e.Use();
                 }
+            }
+        }
+
+        [PreferenceItem("Prefabs")]
+        public static void PreferencesGUI()
+        {
+            cycleModifierKey = (EventModifiers)EditorGUILayout.EnumPopup("Cycle Modifier Key", cycleModifierKey);
+            if (GUI.changed)
+            {
+                EditorPrefs.SetInt("CyclePrefabSelectionCycleModifierKey", (int)cycleModifierKey);
             }
         }
     }
