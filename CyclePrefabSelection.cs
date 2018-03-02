@@ -8,13 +8,22 @@ namespace Vulpes
     [InitializeOnLoad]
     public sealed class CyclePrefabSelection 
     {
-        private static EventModifiers cycleModifierKey = EventModifiers.Alt; // Note: Only Alt, Control, Shift, and Caps Lock seem to work.
+        private static ValidEventModifiers cycleModifierKey = ValidEventModifiers.Alt;
+        private static bool invertScrollDirection = false;
+
+        public enum ValidEventModifiers
+        {
+            Shift = 1,
+            Control = 2,
+            Alt = 4,
+        }
 
         static CyclePrefabSelection()
         {
             SceneView.onSceneGUIDelegate -= OnSceneGUI;
             SceneView.onSceneGUIDelegate += OnSceneGUI;
-            cycleModifierKey = (EventModifiers)EditorPrefs.GetInt("CyclePrefabSelectionCycleModifierKey", 4);
+            cycleModifierKey = (ValidEventModifiers)EditorPrefs.GetInt("CyclePrefabSelectionCycleModifierKey", 4);
+            invertScrollDirection = EditorPrefs.GetBool("CyclePrefabSelectionInvertScrollDirection", false);
         }
 
         private static void OnSceneGUI(SceneView sceneView)
@@ -26,7 +35,7 @@ namespace Vulpes
             {
                 Event e = Event.current;
 
-                if (e.type == EventType.ScrollWheel && e.modifiers == cycleModifierKey)
+                if (e.type == EventType.ScrollWheel && e.modifiers == (EventModifiers)cycleModifierKey)
                 {
                     for (int selectionIndex = 0; selectionIndex < selection.Length; selectionIndex++)
                     {
@@ -49,8 +58,7 @@ namespace Vulpes
                         }
 
                         Object prefab = PrefabUtility.GetPrefabParent(selectionGameObject);
-                        Object nextPrefab = null;
-                        Object previousPrefab = null;
+                        Object prefabToUse = null;
                         string assetDirectory = AssetDatabase.GetAssetPath(prefab).Replace(string.Format("{0}.prefab", prefab.name), "");
                         DirectoryInfo directoryInfo = new DirectoryInfo(assetDirectory);
                         FileInfo[] fileInfo = directoryInfo.GetFiles("*.prefab");
@@ -71,25 +79,24 @@ namespace Vulpes
                             }
                         }
 
-                        if (allPrefabs.Length > 1)
+                        float scrollDelta = e.delta.x + e.delta.y;
+                        if (invertScrollDirection)
                         {
-                            nextPrefab = allPrefabs[(currentIndex == allPrefabs.Length - 1 ? 0 : currentIndex + 1)];
-                            previousPrefab = allPrefabs[(currentIndex == 0 ? allPrefabs.Length - 1 : currentIndex - 1)];
-                        } else
-                        {
-                            nextPrefab = prefab;
-                            previousPrefab = prefab;
+                            scrollDelta = -scrollDelta;
                         }
 
-                        Object prefabToUse = null;
-
-                        // TODO Can probably just use the event delta earlier to determine whether we want the next or previous prefab and avoid caching both prior.
-                        if (e.delta.x > 0.0f || e.delta.y > 0.0f)
+                        if (allPrefabs.Length > 1)
                         {
-                            prefabToUse = nextPrefab;
-                        } else if (e.delta.x < 0.0f || e.delta.y < 0.0f)
+                            if (scrollDelta > 0.0f)
+                            {
+                                prefabToUse = allPrefabs[(currentIndex == allPrefabs.Length - 1 ? 0 : currentIndex + 1)];
+                            } else if (scrollDelta < 0.0f)
+                            {
+                                prefabToUse = allPrefabs[(currentIndex == 0 ? allPrefabs.Length - 1 : currentIndex - 1)];
+                            }
+                        } else
                         {
-                            prefabToUse = previousPrefab;
+                            prefabToUse = prefab;
                         }
 
                         GameObject replacement = PrefabUtility.InstantiatePrefab(prefabToUse) as GameObject;
@@ -113,10 +120,12 @@ namespace Vulpes
         [PreferenceItem("Prefabs")]
         public static void PreferencesGUI()
         {
-            cycleModifierKey = (EventModifiers)EditorGUILayout.EnumPopup("Cycle Modifier Key", cycleModifierKey);
+            cycleModifierKey = (ValidEventModifiers)EditorGUILayout.EnumPopup("Cycle Modifier Key", cycleModifierKey);
+            invertScrollDirection = EditorGUILayout.Toggle("Invert Scroll Direction", invertScrollDirection);
             if (GUI.changed)
             {
                 EditorPrefs.SetInt("CyclePrefabSelectionCycleModifierKey", (int)cycleModifierKey);
+                EditorPrefs.SetBool("CyclePrefabSelectionInvertScrollDirection", invertScrollDirection);
             }
         }
     }
