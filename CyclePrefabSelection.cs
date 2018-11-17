@@ -3,7 +3,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-namespace Vulpes
+namespace Vulpes.Development
 {
     [InitializeOnLoad]
     public sealed class CyclePrefabSelection 
