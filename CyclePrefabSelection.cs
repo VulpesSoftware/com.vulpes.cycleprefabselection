@@ -40,15 +40,15 @@ namespace Vulpes.Development
                     for (int selectionIndex = 0; selectionIndex < selection.Length; selectionIndex++)
                     {
                         GameObject selectionGameObject = (GameObject)selection[selectionIndex];
-                        PrefabType prefabType = PrefabUtility.GetPrefabType(selectionGameObject);
+                        PrefabAssetType prefabType = PrefabUtility.GetPrefabAssetType(selectionGameObject);
 
-                        if (prefabType != PrefabType.PrefabInstance)
+                        if (prefabType != PrefabAssetType.Regular && prefabType != PrefabAssetType.Variant)
                         {
                             newSelection[selectionIndex] = selectionGameObject;
                             continue;
                         }
-
-                        GameObject prefabRoot = PrefabUtility.FindPrefabRoot(selectionGameObject);
+                        
+                        GameObject prefabRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(selectionGameObject);
 
                         if (prefabRoot != selectionGameObject)
                         {
@@ -57,7 +57,7 @@ namespace Vulpes.Development
                             selectionGameObject = prefabRoot;
                         }
 
-                        Object prefab = PrefabUtility.GetPrefabParent(selectionGameObject);
+                        Object prefab = PrefabUtility.GetCorrespondingObjectFromSource(selectionGameObject);
                         Object prefabToUse = null;
                         string assetDirectory = AssetDatabase.GetAssetPath(prefab).Replace(string.Format("{0}.prefab", prefab.name), "");
                         DirectoryInfo directoryInfo = new DirectoryInfo(assetDirectory);
@@ -89,10 +89,10 @@ namespace Vulpes.Development
                         {
                             if (scrollDelta > 0.0f)
                             {
-                                prefabToUse = allPrefabs[(currentIndex == allPrefabs.Length - 1 ? 0 : currentIndex + 1)];
+                                prefabToUse = allPrefabs[currentIndex == allPrefabs.Length - 1 ? 0 : currentIndex + 1];
                             } else if (scrollDelta < 0.0f)
                             {
-                                prefabToUse = allPrefabs[(currentIndex == 0 ? allPrefabs.Length - 1 : currentIndex - 1)];
+                                prefabToUse = allPrefabs[currentIndex == 0 ? allPrefabs.Length - 1 : currentIndex - 1];
                             }
                         } else
                         {
