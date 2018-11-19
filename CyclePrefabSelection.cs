@@ -25,6 +25,7 @@ namespace Vulpes.Development
             SceneView.onSceneGUIDelegate -= OnSceneGUI;
             SceneView.onSceneGUIDelegate += OnSceneGUI;
             cycleModifierKey = (ValidEventModifiers)EditorPrefs.GetInt("CyclePrefabSelectionCycleModifierKey", 4);
+            variantsOnlyModifierKey = (ValidEventModifiers)EditorPrefs.GetInt("CyclePrefabSelectionVariantsOnlyModifierKey", 1);
             invertScrollDirection = EditorPrefs.GetBool("CyclePrefabSelectionInvertScrollDirection", false);
         }
 
