@@ -18,6 +18,7 @@ namespace Vulpes.Development
 
         private static ValidEventModifiers cycleModifierKey = ValidEventModifiers.Alt;
         private static ValidEventModifiers variantsOnlyModifierKey = ValidEventModifiers.Shift;
+        private static bool skipVariants = false;
         private static bool invertScrollDirection = false;
 
         static CyclePrefabSelection()
@@ -26,6 +27,7 @@ namespace Vulpes.Development
             SceneView.onSceneGUIDelegate += OnSceneGUI;
             cycleModifierKey = (ValidEventModifiers)EditorPrefs.GetInt("CyclePrefabSelectionCycleModifierKey", 4);
             variantsOnlyModifierKey = (ValidEventModifiers)EditorPrefs.GetInt("CyclePrefabSelectionVariantsOnlyModifierKey", 1);
+            skipVariants = EditorPrefs.GetBool("CyclePrefabSelectionSkipVariants", false);
             invertScrollDirection = EditorPrefs.GetBool("CyclePrefabSelectionInvertScrollDirection", false);
         }
 
@@ -86,20 +88,17 @@ namespace Vulpes.Development
                                 if (prefabRef == prefab || PrefabUtility.GetCorrespondingObjectFromOriginalSource(prefabRef) == basePrefab)
                                 {
                                     allPrefabs.Add(prefabRef);
-                                    if (prefabRef == prefab)
-                                    {
-                                        currentIndex = allPrefabs.Count - 1;
-                                    }
                                 }
                             } else
                             {
-                                allPrefabs.Add(prefabRef);
-                                if (prefabRef == prefab)
+                                if (!skipVariants || skipVariants && PrefabUtility.GetPrefabAssetType(prefabRef) != PrefabAssetType.Variant)
                                 {
-                                    currentIndex = fileInfoIndex;
+                                    allPrefabs.Add(prefabRef);
                                 }
                             }
                         }
+
+                        currentIndex = allPrefabs.IndexOf((skipVariants && !variantsOnly) ? basePrefab : prefab);
 
                         float scrollDelta = e.delta.x + e.delta.y;
                         if (invertScrollDirection)
@@ -142,13 +141,15 @@ namespace Vulpes.Development
         [PreferenceItem("Prefabs")]
         public static void PreferencesGUI()
         {
-            cycleModifierKey = (ValidEventModifiers)EditorGUILayout.EnumPopup("Cycle Modifier Key", cycleModifierKey);
-            variantsOnlyModifierKey = (ValidEventModifiers)EditorGUILayout.EnumPopup("Variants Only Modifier Key", variantsOnlyModifierKey);
+            cycleModifierKey = (ValidEventModifiers)EditorGUILayout.EnumPopup("Cycle Modifier", cycleModifierKey);
+            variantsOnlyModifierKey = (ValidEventModifiers)EditorGUILayout.EnumPopup("Variants Only Modifier", variantsOnlyModifierKey);
+            skipVariants = EditorGUILayout.Toggle("Skip Variants", skipVariants);
             invertScrollDirection = EditorGUILayout.Toggle("Invert Scroll Direction", invertScrollDirection);
             if (GUI.changed)
             {
                 EditorPrefs.SetInt("CyclePrefabSelectionCycleModifierKey", (int)cycleModifierKey);
                 EditorPrefs.SetInt("CyclePrefabSelectionVariantsOnlyModifierKey", (int)variantsOnlyModifierKey);
+                EditorPrefs.SetBool("CyclePrefabSelectionSkipVariants", skipVariants);
                 EditorPrefs.SetBool("CyclePrefabSelectionInvertScrollDirection", invertScrollDirection);
             }
         }
