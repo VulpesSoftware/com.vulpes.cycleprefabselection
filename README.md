@@ -9,8 +9,9 @@ How do I use it?
 - Download 'CyclePrefabSelection.cs' or clone the repo if you like.
 - Add 'CyclePrefabSelection.cs' to your Unity project within a folder called 'Editor'.
 - Once added to your project, if you select a Prefab instance (or multiple) in the Scene View and hold 'Alt' and Scroll the mouse wheel up or down you can cycle through all the Prefabs that live in the same directory as the one selected.
+- As of Unity 2018.3.X you can also hold 'Alt + Shift' and Scroll the mouse wheel to only cycle through the Prefab Variants of the selected object.
 - Save a bunch of time.
 - Profit?
 
 Plans for future updates?
-- There's still a couple of areas that I want to revisit and optimise a bit more, those are currently marked in the code with 'TODO' comment tags.
+- I'm currently looking into ways that I can enhance this utility further with the advent of the new nested prefab workflow in Unity 2018.3.
