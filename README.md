@@ -6,8 +6,7 @@ What's this?
 - It's a Unity Editor Utility inspired by a feature from the Fallout 4 Creation Kit that lets you cycle objects simply by holding 'Alt' and Scrolling the mouse wheel. It's mostly just a quality of life thing that I wanted to have for doing Level Design stuff in Unity because I tend to work with a lot of modular kits, figured other people might like to make use of it.
 
 What can I do with the code?
-- You can pretty much do whatever you want with the code provided here, just don't go trying to sell it, that's kind of a shitty thing to do given that I've released it here for free.
-- You're welcome to integrate it into larger projects and/or frameworks if you want, you're not expected to release your entire code base as a result of integrating this into a larger project or collection of code, that would be a bit silly.
+- Whatever you want.
 
 How do I use it?
 - Download 'CyclePrefabSelection.cs' or clone the repo if you like.
