@@ -1,0 +1,19 @@
+{
+  "name": "com.vulpes.cycleprefabselection",
+  "displayName": "Vulpes Cycle Prefab Selection",
+  "version": "1.0.0",
+  "unity": "2018.3",
+  "description": "A simple Unity utility that allows the user to cycle through Prefabs in the Scene View using 'Alt + Mouse Scroll'.",
+  "keywords": [
+    "vulpes",
+    "cycle",
+    "prefab",
+    "selection"
+  ],
+  "license": "Unlicense",
+  "author": {
+    "name": "Vulpes Software",
+    "email": "tylahheil@gmail.com",
+    "url": "https://vulpessoftware.com"
+  }
+}
